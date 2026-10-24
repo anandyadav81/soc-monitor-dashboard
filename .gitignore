@@ -1,0 +1,64 @@
+# secrets and local state
+.env
+*.env
+# every other private environment file (.env.local, .env.production, .env.staging, ...)
+.env.*
+# ...but keep the template with dummy placeholders available to Git
+!.env.example
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.csr
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.ppk
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+secrets/
+*.secret
+# runtime data
+data/*.db
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.log
+*.log.*
+logs/
+selftest-report.txt
+*.bak
+# backups (archives go in backups/)
+backups/
+*.backup
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+# editor / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

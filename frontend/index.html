@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOC Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 34 38" aria-hidden="true"><path d="M17 1 32 7v13c0 9-6 15-15 17C8 35 2 29 2 20V7z" fill="none" stroke="#2f7bff" stroke-width="2.5"/><path d="M11 14l6 10 6-10" fill="none" stroke="#2f7bff" stroke-width="2.5"/></svg>
+      <div><b>SOC Dashboard</b><small>Powered by Wazuh + Suricata</small></div>
+    </div>
+    <input type="text" id="search" placeholder="Search alerts, IPs, hosts... (press Enter)" aria-label="Search alerts">
+    <div class="status"><i class="dot" id="wzdot"></i><div><b id="wz">Connecting...</b><small id="sync"></small></div></div>
+    <button class="ib" id="refresh" title="Refresh now" aria-label="Refresh now">&#10227;</button>
+    <select id="every" aria-label="Auto refresh">
+      <option value="0">Auto: off</option><option value="1000">Auto: 1 s</option><option value="5000" selected>Auto: 5 s</option>
+      <option value="10000">Auto: 10 s</option><option value="30000">Auto: 30 s</option>
+    </select>
+    <button class="ib" id="bell" aria-label="Notifications">&#128276;<em id="nbell">0</em></button>
+    <button class="ib" id="theme" aria-label="Light or dark">&#9728;</button>
+    <div class="me"><span class="av" id="av"></span><div><b id="who"></b><small id="role"></small></div><button id="logout">Sign out</button></div>
+    <div class="pn" id="notif" hidden><h2>Notifications <button id="nclear">Clear all</button></h2><ul id="nlist"></ul></div>
+  </header>
+
+  <aside class="side">
+    <nav id="nav">
+      <button class="nv on" data-view="dashboard"><i>&#127968;</i>Dashboard</button>
+      <button class="nv" data-view="events"><i>&#128203;</i>Security Events</button>
+      <button class="nv" data-view="incidents"><i>&#128680;</i>Incidents<u class="z" id="open">0</u></button>
+      <button class="nv" data-view="blocklist"><i>&#128683;</i>Blocked IPs<u id="nblocked">0</u></button>
+      <button class="nv" data-view="agents"><i>&#128421;</i>Endpoint Agents</button>
+            <button class="nv" data-view="threat"><i>&#128737;</i>Threat Intelligence</button>
+      <button class="nv" data-view="soon"><i>&#10024;</i>AI Analysis<u>Soon</u></button>
+      <button class="nv" data-view="playbooks"><i>&#128216;</i>Response Playbooks</button>
+      <button class="nv" data-view="mitre"><i>&#127919;</i>MITRE ATT&amp;CK</button>
+      <button class="nv" data-view="vulns"><i>&#128275;</i>Vulnerabilities</button>
+      <button class="nv" data-view="reports"><i>&#128196;</i>Reports</button>
+      <button class="nv" data-view="audit" id="t-audit"><i>&#129534;</i>Audit Log</button>
+      <button class="nv" data-view="users" id="t-users"><i>&#128101;</i>Users<u class="z" id="npend"></u></button>
+      <button class="nv" data-view="account"><i>&#9881;</i>My Account</button>
+    </nav>
+    <div class="sys"><b>System Status</b>
+      <div><span>Wazuh Manager</span><i id="s-mgr">-</i></div>
+      <div><span>Wazuh Indexer</span><i id="s-idx">-</i></div>
+      <div><span>Suricata alerts</span><i id="s-sur">-</i></div>
+      <div><span>API connection</span><i id="s-api">-</i></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <p id="err" class="err" role="alert" hidden></p>
+
+    <section id="dashboard">
+      <div class="filters"><span class="mute">Time range for the numbers below</span><select id="drange" aria-label="Time range"><option value="all">All time</option><option value="1h">Last hour</option><option value="24h" selected>Last 24 hours</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option></select></div>
+      <div class="g kp">
+        <div class="pn k"><span class="ic" style="background:var(--rd)">&#128737;</span><small>Total alerts</small><div><b id="total">-</b><span class="dl" id="d-total"></span><small class="vs">vs last 24h</small></div><div class="sp" id="sp-total"></div></div>
+        <div class="pn k"><span class="ic" style="background:var(--rd)">&#9763;</span><small>Suricata alerts</small><div><b id="total2">-</b><span class="dl" id="d-total2"></span><small class="vs">vs last 24h</small></div><div class="sp" id="sp-total2"></div></div>
+        <div class="pn k"><span class="ic" style="background:var(--or)">&#128269;</span><small>Port scan alerts</small><div><b id="scans">-</b><span class="dl" id="d-scans"></span><small class="vs">vs last 24h</small></div><div class="sp" id="sp-scans"></div></div>
+        <div class="pn k"><span class="ic" style="background:var(--pu)">&#128101;</span><small>Unique attacker IPs</small><div><b id="unique">-</b><small class="vs" id="u-vs">in the last 24 hours</small></div></div>
+        <div class="pn k"><span class="ic" style="background:var(--rd)">&#128680;</span><small>Open incidents</small><div><b id="open2">-</b><small class="vs">not closed yet</small></div></div>
+        <div class="pn k"><span class="ic" style="background:var(--bl)">&#128421;</span><small>Active agents</small><div><b id="k-agents">-</b><small class="vs" id="d-agents"></small></div></div>
+      </div>
+      <div class="g r2">
+        <div class="pn"><h2>Alerts over time (UTC) <select id="crange" aria-label="Time range"><option value="24">Last 24 hours</option><option value="168">Last 7 days</option></select></h2><div class="lg" id="lg"></div><svg id="ch" role="img" aria-label="Alerts over time"></svg></div>
+        <div class="pn"><h2>Alerts by severity</h2><div class="dn2"><svg id="dn" viewBox="0 0 160 160" role="img" aria-label="Alerts by severity"></svg><div id="dl"></div></div></div>
+        <div class="pn"><h2>Top attacker IPs <span class="seg" id="iptabs"><button class="on" data-k="top_ips">Source IP</button><button data-k="top_dst">Destination IP</button></span></h2><table><thead><tr><th>#</th><th>IP address</th><th>Alerts</th></tr></thead><tbody id="ip"></tbody></table></div>
+      </div>
+      <div class="g r3">
+        <div class="pn"><h2>Top alert types</h2><div id="cat"></div></div>
+        <div class="pn"><h2>MITRE ATT&amp;CK tactics</h2><div id="tac"></div></div>
+        <div class="pn"><h2>Attack origins</h2><div id="geo"></div><p class="mute" id="geonote"></p></div>
+      </div>
+      <div class="g r4">
+        <div class="pn"><h2>Recent security events <a href="#" id="viewall">View all</a></h2><div class="tw"><table><thead><tr><th>Time (UTC)</th><th>Severity</th><th>Event</th><th>Source IP</th><th>Host</th><th></th></tr></thead><tbody id="ev"></tbody></table></div></div>
+        <div class="pn"><h2>Endpoint agents <a href="#" id="viewag">View all</a></h2><table><thead><tr><th>Agent</th><th>Host</th><th>Status</th><th>Last seen</th></tr></thead><tbody id="ag"></tbody></table><p class="mute" id="agmsg"></p></div>
+        <div class="pn ai"><h2>AI alert assistant <span class="chip">Soon</span></h2>
+          <p class="mute">Plain-English explanation, risk score and a response playbook for any alert.</p>
+          <input type="text" id="ai" placeholder="Paste alert ID, rule ID or description..." aria-label="Alert to analyze">
+          <button class="go" id="go">Analyze alert</button><small id="aim" role="status"></small>
+          <ul><li>Plain English explanation</li><li>Risk scoring</li><li>MITRE ATT&amp;CK mapping</li><li>Investigation steps</li><li>Response playbook</li></ul></div>
+      </div>
+    </section>
+
+    <section id="events" hidden>
+      <div class="split">
+        <div class="pn">
+          <h2>Security events <small id="count"></small></h2>
+          <div class="filters">
+            <input type="text" id="q" placeholder="Search IP or description" aria-label="Search">
+            <select id="level" aria-label="Severity level"><option value="">All levels</option></select>
+            <select id="range" aria-label="Time range">
+              <option value="all">All time</option>
+              <option value="1h">Last hour</option>
+              <option value="24h" selected>Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+            </select>
+            <label><input type="checkbox" id="scan"> Port scans only</label>
+            <label><input type="checkbox" id="noipv6"> Hide IPv6</label>
+            <button id="clear">Clear</button>
+            <a class="btn" id="csv" href="/api/alerts.csv">Export CSV</a>
+          </div>
+          <p class="mute" id="updated"></p>
+          <div class="tw" id="tw"><table>
+            <thead><tr><th>Time (UTC)</th><th>Severity</th><th>Attacker IP</th><th>Target IP</th><th>Description</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table></div>
+        </div>
+        <aside class="pn detail" id="detail" aria-live="polite"><h2>Alert details</h2><p class="mute">Select an alert to see details and take action.</p></aside>
+      </div>
+    </section>
+
+    <section id="agents" hidden>
+      <div class="pn"><h2>Endpoint agents <small>read from the Wazuh Manager</small></h2><table>
+        <thead><tr><th>ID</th><th>Host</th><th>IP</th><th>Status</th><th>Last seen</th></tr></thead>
+        <tbody id="ag-rows"></tbody></table><p class="mute" id="agmsg2"></p></div>
+    </section>
+
+    <section id="incidents" hidden>
+    <div class="card"><h2>Incidents</h2><div class="tw"><table>
+      <thead><tr><th>#</th><th>Created</th><th>Attacker IP</th><th>Target IP</th><th>Description</th><th>Alerts</th><th>Status</th><th>Note</th><th></th></tr></thead>
+      <tbody id="inc-rows"></tbody>
+    </table></div></div>
+  </section>
+
+  <section id="blocklist" hidden>
+    <div class="banner" id="mode"></div>
+    <div class="card" id="b-card">
+      <h2>Block an IP</h2>
+      <div class="filters">
+        <input type="text" id="b-ip" placeholder="IP address" aria-label="IP address to block">
+        <input type="text" id="b-reason" placeholder="Reason" aria-label="Reason" style="min-width:300px">
+        <button class="danger" id="b-go">Block IP</button>
+      </div>
+      <p class="mute" id="b-info"></p>
+    </div>
+    <div class="card"><h2>Blocked IPs</h2><div class="tw"><table>
+      <thead><tr><th>#</th><th>IP</th><th>Reason</th><th>Blocked</th><th>By</th><th>Mode</th><th>Status</th><th>Result</th><th></th></tr></thead>
+      <tbody id="b-rows"></tbody>
+    </table></div></div>
+  </section>
+
+  <section id="audit" hidden>
+    <div class="card"><h2>Audit log <span class="mute">latest 200 changes</span></h2><div class="tw"><table>
+      <thead><tr><th>Time</th><th>Who</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
+      <tbody id="a-rows"></tbody>
+    </table></div></div>
+  </section>
+  <section id="users" hidden>
+    <div class="card"><h2>Users <span class="mute">New sign-ups have no access until you approve them</span></h2><div class="tw"><table>
+      <thead><tr><th>Email</th><th>Status</th><th>Role</th><th>Created</th><th>Approved by</th><th>Actions</th></tr></thead>
+      <tbody id="u-rows"></tbody>
+    </table></div>
+    <p class="mute">Viewer: look only. Analyst: viewer + incidents + CSV export. Admin: everything, including Block IP, audit log and users.</p></div>
+  </section>
+
+  <section id="account" hidden>
+    <form class="card narrow" id="acc-form">
+      <h2>My account</h2>
+      <p class="mute" id="acc-info"></p>
+      <label class="col">Current password <input type="password" id="acc-old" autocomplete="current-password" required></label>
+      <label class="col">New password (10+ characters) <input type="password" id="acc-new" autocomplete="new-password" required></label>
+      <label class="col">Repeat new password <input type="password" id="acc-new2" autocomplete="new-password" required></label>
+      <p class="ok" id="acc-msg" role="status"></p>
+      <button class="primary" type="submit">Change password</button>
+    </form>
+  </section>
+
+    <section id="soon" hidden><div class="pn"><h2 id="soon-title"></h2><p class="mute">This page is planned but not built yet.</p></div></section>
+  </main>
+</div>
+<script src="js/app.js"></script>
+<script src="js/app.js"></script>
+<script src="js/pages.js"></script>
+</body>
+</html>

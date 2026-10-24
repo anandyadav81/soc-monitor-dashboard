@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOC Dashboard: sign in</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login">
+<form class="card" id="form">
+  <h1>SOC Dashboard</h1>
+  <div class="tabs">
+    <button type="button" class="tab on" id="m-in">Sign in</button>
+    <button type="button" class="tab" id="m-up">Create account</button>
+  </div>
+  <p class="mute" id="hint"></p>
+  <label class="col">Email
+    <input type="email" id="user" autocomplete="username" autocapitalize="none" placeholder="you@example.com" required>
+  </label>
+  <label class="col">Password
+    <input type="password" id="pw" autocomplete="current-password" required>
+  </label>
+  <label class="col" id="row2" hidden>Repeat password
+    <input type="password" id="pw2" autocomplete="new-password">
+  </label>
+  <p class="err" id="err" role="alert" hidden></p>
+  <p class="ok" id="okmsg" role="status" hidden></p>
+  <button class="primary" id="go" type="submit">Sign in</button>
+</form>
+<script src="js/login.js"></script>
+</body>
+</html>
