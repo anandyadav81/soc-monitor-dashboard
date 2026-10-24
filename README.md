@@ -1,38 +1,100 @@
 # SOC Monitor Dashboard
 
-A lab-focused Security Operations Center (SOC) dashboard that brings Wazuh and Suricata alert information into one interface. It is built with a Python/Flask backend and a browser-based frontend, with incident tracking and analyst-focused views for a home lab or portfolio demonstration.
+A lab-focused Security Operations Center (SOC) dashboard that brings Wazuh security data into one interface. The project uses a Python/Flask backend and a browser-based frontend for alert monitoring, incident tracking, threat visibility, and analyst workflows in a virtualized cybersecurity lab.
 
-> **Project status:** This is a lab/portfolio project, not a production-ready managed SOC service. The **AI Analysis** section is marked *Soon* in the current UI and should be treated as planned rather than an implemented AI capability.
+> **Project status:** This is a learning and portfolio project, not a production-ready managed SOC service. Features marked **Soon**, including AI Analysis, are planned and should not be treated as implemented capabilities.
+
+## Project Highlights
+
+- Wazuh-based security alert monitoring
+- Suricata network detection in the lab
+- Incident tracking and investigation views
+- Endpoint and agent visibility
+- MITRE ATT&CK-oriented alert context
+- Response playbook interface
+- Reports and threat-intelligence views
+- Flask backend with a browser-based dashboard
+
+## Lab Architecture
+
+The lab contains separate Ubuntu virtual machines for the Wazuh server and the monitored target. The target runs the Wazuh agent and Suricata. Kali Linux is used to generate controlled test activity against the lab target.
+
+```text
+             Controlled test activity
+                       |
+                       v
+                +-------------+
+                | Kali Linux  |
+                |  Attacker   |
+                +-------------+
+                       |
+                       v
+          +---------------------------+
+          | Ubuntu Target             |
+          | Wazuh Agent + Suricata    |
+          +---------------------------+
+                       |
+                       | Agent events / collected logs
+                       v
+          +---------------------------+
+          | Ubuntu Wazuh Server       |
+          | Wazuh Manager / Indexer*  |
+          +---------------------------+
+                       |
+                       | Wazuh API / Indexer data
+                       v
+          +---------------------------+
+          | SOC Monitor Dashboard     |
+          | Flask backend + frontend  |
+          +---------------------------+
+```
+
+\*The diagram groups Wazuh Manager and Indexer under the Wazuh server role; confirm their exact installation layout if you later document the VM configuration in more detail. Suricata alerts appear in Wazuh and the custom dashboard only when Suricata log collection and the relevant Wazuh integration are configured correctly.
+
+### Lab Components
+
+- **Kali Linux:** Used for controlled attack simulation and security testing.
+- **Ubuntu target:** Runs the Wazuh agent and Suricata.
+- **Ubuntu Wazuh server:** Receives and processes security events from the monitored endpoint.
+- **SOC Monitor Dashboard:** Uses the configured Wazuh data source to display alert and incident information.
 
 ## Screenshots
 
-These are screenshots from the actual project. Email addresses and detected IP addresses have been blurred where identified; review them before publishing in case any sensitive text was missed.
+The screenshots below are stored in the repository's `screenshots/` directory. Image links are relative to the project root; the filenames must match exactly.
 
-### Dashboard overview
+### SOC Dashboard
 
-![SOC Dashboard overview](screenshots/dashboard-overview.png)
+![SOC Monitor Dashboard overview](screenshots/dashboard-overview.png)
 
-### Incidents and endpoint agents
+### Incident Management
 
 ![Incident management](screenshots/incidents.png)
 
+### Endpoint Agents
+
 ![Endpoint agents](screenshots/endpoint-agents.png)
 
-### Threat intelligence and MITRE ATT&CK
+### Threat Intelligence
 
-![Threat Intelligence](screenshots/threat-intelligence.png)
+![Threat intelligence](screenshots/threat-intelligence.png)
+
+### MITRE ATT&CK
 
 ![MITRE ATT&CK](screenshots/mitre-attack.png)
 
-### Response playbooks and reports
+### Response Playbooks
 
 ![Response playbooks](screenshots/response-playbooks.png)
 
+### Reports
+
 ![Reports](screenshots/reports.png)
 
-### Lab detection evidence
+### Wazuh Custom Rules
 
 ![Wazuh custom rules](screenshots/wazuh-custom-rules.png)
+
+### Suricata Detection Evidence
 
 ![Suricata alert evidence](screenshots/suricata-alert-evidence.png)
 
@@ -40,137 +102,110 @@ These are screenshots from the actual project. Email addresses and detected IP a
 
 ![NULL scan detection](screenshots/null-scan-detection.png)
 
+### Telegram Notifications
+
 ![Telegram alert notifications](screenshots/telegram-notifications.png)
 
-## Features shown in the project
+## Wazuh Monitoring Screenshots
 
-- **Security dashboard:** alert totals, severity breakdown, alert trends, top alert types and recent events.
-- **Wazuh + Suricata monitoring:** combined views for endpoint and network security alerts.
-- **Incident management:** create and track incidents, view attacker/target information, and update incident status.
-- **Endpoint agents:** view Wazuh agent status.
-- **Threat intelligence view:** summarize observed lab attacker IPs, alert counts and risk information. This is based on the lab's own telemetry; it is not a claim of external reputation validation.
-- **MITRE ATT&CK view:** display alert-associated tactics and techniques when tags are present in the source rules.
-- **Response playbooks:** step-by-step guidance for common alert types; commands should be reviewed before use.
-- **Reports and audit log:** review activity and summarize alert/incident information.
-- **Accounts and roles:** admin/analyst/viewer controls are available in the application.
-- **Active Response:** IP blocking integration is configurable and uses dry-run mode by default. Live blocking requires deliberate configuration and testing in an isolated lab.
+The following screenshots show the Wazuh web interface used in the lab.
 
-## Architecture
+### Wazuh Overview
 
-```text
-Wazuh Indexer ── alert data ──┐
-                             ├── Flask backend/API ── Web frontend
-Wazuh Manager API ─ agent data┘          │
-                                        ├── local SQLite database
-Suricata ── alerts via Wazuh ────────────┘   (incidents, blocklist, audit data)
-```
+![Wazuh overview dashboard](screenshots/wazuh-home-extra.png)
 
-The browser communicates with the Flask application; it does not connect directly to the Indexer or local database.
+### Wazuh Threat Hunting
 
-## Requirements
+![Wazuh Threat Hunting dashboard](screenshots/wazuh-threat-hunting.png)
 
-- Windows 10/11 (the commands below use PowerShell)
-- Python 3.12 recommended
-- A reachable Wazuh Indexer for live alert data
-- Wazuh Manager API credentials if you want agent information and Active Response integration
+> `wazuh-server-overview.png` is a Wazuh login screen, so it is not presented as a server dashboard screenshot.
 
-## Setup and run (Windows / VS Code)
+## Technology Stack
 
-Open a terminal in the project root—the `soc-dashboard` folder containing `backend`, `frontend`, `requirements.txt` and `start.bat`.
+- **Backend:** Python, Flask
+- **Frontend:** HTML, CSS, JavaScript
+- **Security monitoring:** Wazuh
+- **Network detection:** Suricata
+- **Local application data:** SQLite
+- **Lab environment:** Virtual machines running Ubuntu and Kali Linux
 
-### 1. Create a virtual environment and install dependencies
+## Setup
+
+The commands below assume Python and Git are installed. Run them from the project root in PowerShell.
+
+### 1. Create and activate a virtual environment
 
 ```powershell
-py -3.12 -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+```
+
+### 2. Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 3. Configure environment variables
+
+If this project version uses a local `.env` file, create it from the example and set the correct lab-specific values.
+
+```powershell
 Copy-Item .env.example .env
 ```
 
-If PowerShell blocks virtual-environment activation, run this in the current terminal and activate again:
+Keep real passwords, API credentials, secret keys, and other private values in your local `.env` file. Never commit real secrets to GitHub. Review the example configuration before starting the application; example values are not working credentials.
 
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
-.\.venv\Scripts\Activate.ps1
-```
+### 4. Start the application
 
-### 2. Configure your local environment
-
-Open `.env` and set values for **your own lab**. At minimum, configure the Wazuh Indexer URL and replace the `change-me` password placeholder with your real Indexer password:
-
-```dotenv
-SOC_INDEXER_URL=https://YOUR-WAZUH-HOST:9200
-SOC_INDEXER_USER=admin
-SOC_INDEXER_PASS=YOUR_INDEXER_PASSWORD
-SOC_ADMIN_EMAIL=admin@example.com
-SOC_UI_PASSWORD=
-SOC_VERIFY_TLS=true
-SOC_WAZUH_API_URL=https://YOUR-WAZUH-HOST:55000
-SOC_WAZUH_API_USER=wazuh-wui
-SOC_WAZUH_API_PASS=YOUR_WAZUH_API_PASSWORD
-SOC_WAZUH_VERIFY_TLS=true
-SOC_AR_DRY_RUN=true
-SOC_HOST=127.0.0.1
-SOC_PORT=5000
-```
-
-Keep real credentials only in `.env`. Do not put passwords, tokens, private keys, or real environment values in `.env.example` or screenshots. TLS verification should remain enabled; for a self-signed certificate in an isolated lab, configure a trusted CA where possible instead of disabling verification.
-
-### 3. Start the dashboard
-
-```powershell
-python backend/app.py
-```
-
-Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser. Sign in with the admin account configured for your local environment. Keep the terminal open while using the app; press `Ctrl+C` to stop it.
-
-The app creates its local SQLite database under `data/` when needed. Database files contain local runtime state and should not be committed.
-
-### Optional launcher
-
-You can also run:
+Use the supplied startup script if that matches your local setup:
 
 ```powershell
 .\start.bat
 ```
 
-The launcher installs the listed requirements and starts the application. The virtual-environment approach above is recommended so you know which Python installation is being used.
+If you normally use a different documented command for this project version, follow that local configuration.
 
-## Tests
+## Security Notes
 
-With the virtual environment activated, run the project's automated tests from the repository root:
+- Test only systems and IP addresses you own or are explicitly authorized to test.
+- Keep real credentials in a local `.env` file and out of Git.
+- Change default or example credentials before using the lab.
+- Review screenshots for usernames, email addresses, tokens, and internal details before publishing.
+- This is a lab/portfolio project, not a production-ready SOC service.
+- Active Response behaviour depends on local configuration. Verify whether actions are in dry-run or enforcement mode before testing.
 
-```powershell
-python -m unittest discover -s tests -v
-python tests/phase1_audit.py
-```
+## Testing
 
-These tests do not replace a live connectivity check against your own Wazuh deployment. Review any self-test report locally before sharing it, because diagnostic output can contain IP addresses, hostnames or other environment details.
+The repository contains test and audit scripts. Run the checks documented for your project version and review their output before making changes. Passing local tests does not by itself constitute a complete security audit.
 
-## Security notes before publishing
-
-- Do **not** upload `.env`, `.venv/`, local database files, logs, backups or self-test reports.
-- Check `git status` and `git check-ignore` before the first commit.
-- Review screenshots at full size; blur email addresses, internal IPs, hostnames, chat details and any credentials that may remain visible.
-- Keep Active Response in dry-run mode until you have verified the Wazuh API and tested blocking/unblocking in an isolated lab.
-- Do not expose the development server to the public internet. A production deployment needs a proper HTTPS-capable server, secure secrets management and deployment-specific hardening.
-
-## Project structure
+## Project Structure
 
 ```text
 soc-dashboard/
-├── backend/          # Flask app, API, authentication, services and Wazuh integrations
-├── frontend/         # HTML, CSS and JavaScript interface
-├── data/             # Local SQLite runtime data (not for Git)
-├── tests/             # Automated tests and audit checks
-├── screenshots/      # Portfolio screenshots used by this README
-├── .env.example      # Configuration template with placeholders
-├── .gitignore        # Excludes local secrets, databases and generated files
-├── requirements.txt  # Python dependencies
-└── start.bat         # Optional Windows launcher
+├── backend/
+│   ├── services/
+│   └── wazuh/
+├── data/
+├── frontend/
+│   ├── css/
+│   └── js/
+├── screenshots/
+├── tests/
+├── .env.example
+├── .gitignore
+├── requirements.txt
+├── start.bat
+└── README.md
 ```
+
+## Limitations
+
+- This is a lab/portfolio project and should not be treated as a production deployment.
+- Alert visibility depends on Wazuh connectivity, indexer availability, agent status, and log collection configuration.
+- Suricata data visibility depends on its configured log output and Wazuh integration.
+- AI Analysis is planned if shown as **Soon** in the current UI; it is not claimed as implemented here.
 
 ## License
 
-See [LICENSE](LICENSE) in the repository.
+See the [`LICENSE`](LICENSE) file for the project's license.
